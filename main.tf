@@ -32,16 +32,16 @@ resource "aws_route" "private_nat_gateway" {
 resource "aws_route_table" "private" {
   vpc_id           = "${aws_vpc.mod.id}"
   propagating_vgws = ["${var.private_propagating_vgws}"]
-  count            = "${length(var.private_subnets)}"
-  tags             = "${merge(var.tags, map("Name", format("%s-rt-private-%s", var.name, element(var.azs, count.index))))}"
+  count            = "${length(var.private_subnets) * length(var.azs)}"
+  tags             = "${merge(var.tags, map("Name", format("%s-rt-private-%s-%s", var.name,  element(var.private_subnets, count.index / length(var.azs)), element(var.azs, count.index))))}"
 }
 
 resource "aws_subnet" "private" {
   vpc_id            = "${aws_vpc.mod.id}"
-  cidr_block        = "${var.private_subnets[count.index]}"
+  cidr_block        = "${element(var.private_subnets_addrs[element(var.private_subnets, count.index / length(var.azs))], count.index)}"
   availability_zone = "${element(var.azs, count.index)}"
-  count             = "${length(var.private_subnets)}"
-  tags              = "${merge(var.tags, map("Name", format("%s-subnet-private-%s", var.name, element(var.azs, count.index))))}"
+  count             = "${length(var.private_subnets) * length(var.azs)}"
+  tags              = "${merge(var.tags, map("Name", format("%s-subnet-private-%s-%s", var.name, element(var.private_subnets, count.index / length(var.azs)), element(var.azs, count.index))))}"
 }
 
 resource "aws_subnet" "database" {
@@ -72,19 +72,19 @@ resource "aws_subnet" "public" {
 
 resource "aws_eip" "nateip" {
   vpc   = true
-  count = "${length(var.private_subnets) * lookup(map(var.enable_nat_gateway, 1), "true", 0)}"
+  count = "${length(var.private_subnets) * length(var.azs) * lookup(map(var.enable_nat_gateway, 1), "true", 0)}"
 }
 
 resource "aws_nat_gateway" "natgw" {
   allocation_id = "${element(aws_eip.nateip.*.id, count.index)}"
   subnet_id     = "${element(aws_subnet.public.*.id, count.index)}"
-  count         = "${length(var.private_subnets) * lookup(map(var.enable_nat_gateway, 1), "true", 0)}"
+  count         = "${length(var.private_subnets) * length(var.azs) * lookup(map(var.enable_nat_gateway, 1), "true", 0)}"
 
   depends_on = ["aws_internet_gateway.mod"]
 }
 
 resource "aws_route_table_association" "private" {
-  count          = "${length(var.private_subnets)}"
+  count          = "${length(var.private_subnets) * length(var.azs)}"
   subnet_id      = "${element(aws_subnet.private.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.private.*.id, count.index)}"
 }

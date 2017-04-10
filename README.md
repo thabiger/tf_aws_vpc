@@ -37,7 +37,11 @@ module "vpc" {
   name = "my-vpc"
 
   cidr = "10.0.0.0/16"
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets = ["subnet_1", "subnet_2"]
+  private_subnets_addrs = {
+    subnet_1 = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    subnet_2 = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
+  }
   public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
   enable_nat_gateway = "true"
@@ -58,7 +62,8 @@ Outputs
 =======
 
  - `vpc_id` - does what it says on the tin
- - `private_subnets` - list of private subnet ids
+ - `private_subnets` - list of private subnet names
+ - `private_subnets_addrs` - list of private subnet ids
  - `public_subnets` - list of public subnet ids
  - `database_subnets` - list of database subnets ids
  - `database_subnet_group` - db subnet group name
@@ -69,6 +74,8 @@ Outputs
  - `nat_eips_public_ips` - list of NAT gateways' public Elastic IP's (if any are provisioned)
  - `natgw_ids` - list of NAT gateway ids
  - `igw_id` - Internet Gateway id string
+
+There must be equal number of private subnet ids as azs provided.
 
 **NOTE**: previous versions of this module returned a single string as a route
 table ID, while this version returns a list.

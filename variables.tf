@@ -8,8 +8,15 @@ variable "public_subnets" {
 }
 
 variable "private_subnets" {
-  description = "A list of private subnets inside the VPC."
+  type = "list"
+  description = "Private subnets definition"
   default     = []
+}
+
+variable "private_subnets_addrs" {
+  type = "map"
+  description = "Private subnet addresses"
+  default     = {}
 }
 
 variable "database_subnets" {
