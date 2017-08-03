@@ -7,6 +7,12 @@ variable "public_subnets" {
   default     = []
 }
 
+variable "public_subnets_addrs" {
+  type = "map"
+  description = "Public subnet addresses"
+  default     = {}
+}
+
 variable "private_subnets" {
   type = "list"
   description = "Private subnets definition"
